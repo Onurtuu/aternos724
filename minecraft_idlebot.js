@@ -48,11 +48,13 @@ bot.on('time', function() {
         if (bot.time.age - lasttime > interval) {
             if (moving == 1) {
                 bot.setControlState(lastaction,false);
+                moving = 0;
                 console.log("Stopped moving");
                 lasttime = bot.time.age;
             } else {
                 lastaction = actions[Math.floor(Math.random() * actions.length)];
                 bot.setControlState(lastaction,true);
+                moving = 1;
                 console.log("Started moving " + lastaction);
                 lasttime = bot.time.age;
             }
