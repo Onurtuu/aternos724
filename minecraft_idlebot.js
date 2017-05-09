@@ -32,8 +32,17 @@ var bot = mineflayer.createBot({
 
 var lasttime = -1;
 var moving = 0;
-var actions = [ 'forward', 'back', 'left', 'right', 'jump']
+var connected = 0;
+var actions = [ 'forward', 'back', 'left', 'right']
 var lastaction;
+var pi = 3.14159;
+
+function getRandomArbitrary(min, max) {
+       return Math.random() * (max - min) + min;
+
+}
+
+var sleep = require('sleep');
 
 bot.on('chat', function(username, message) {
   if (username === bot.username) return;
@@ -48,6 +57,9 @@ bot.on('health',function() {
 });
 
 bot.on('time', function() {
+    if (connected <1) {
+        return;
+    }
     if (lasttime<0) {
         lasttime = bot.time.age;
         console.log("Age set to " + lasttime)
@@ -57,22 +69,37 @@ bot.on('time', function() {
         if (bot.time.age - lasttime > interval) {
             if (moving == 1) {
                 bot.setControlState(lastaction,false);
-                console.log("Stopped moving after " + interval + " seconds");
+                moving = 0;
+                console.log("Stopped moving after " + (interval/20) + " seconds");
                 lasttime = bot.time.age;
             } else {
+                var yaw = Math.random()*pi - (0.5*pi);
+                var pitch = Math.random()*pi - (0.5*pi);
+                bot.look(yaw,pitch,false);
+                console.log("Changed looking direction to yaw " + yaw + " and pitch " + pitch);
+
                 lastaction = actions[Math.floor(Math.random() * actions.length)];
                 bot.setControlState(lastaction,true);
-                console.log("Started moving " + lastaction +" after " + interval + "seconds");
+                moving = 1;
+                console.log("Started moving " + lastaction +" after " + (interval/20) + "seconds");
                 lasttime = bot.time.age;
+                bot.activateItem();
             }
         }
     }
-})
+});
+
+bot.on('spawn',function() {
+    connected=1;
+});
+
 bot.on('end', function () {
     console.log("Disconnected. Waiting 10 seconds")
-    sleep(10)
+    bot.quit();
+    sleep.sleep(10);
     lasttime = -1;
     moving = 0;
+    connected=0;
     bot = mineflayer.createBot({
         host: host,
         port: port,       // optional
@@ -80,4 +107,4 @@ bot.on('end', function () {
         password: password
     });
     console.log("reconnected.")
-})
+});
